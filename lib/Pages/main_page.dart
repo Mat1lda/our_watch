@@ -1,12 +1,20 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:out_watch/model/search_category.dart';
 import 'package:out_watch/model/movie.dart';
 import 'package:out_watch/widgets/movie_title.dart';
+import 'package:out_watch/controller/main_page_controller.dart';
+import 'package:out_watch/model/main_page_data.dart';
+
+final mainPageDataControllerProvider =
+StateNotifierProvider<MainPageController, MainPageData>(
+      (ref) {
+    return MainPageController();
+  },
+);
 
 class MainPage extends ConsumerWidget {
   late double _heightScreen;
@@ -19,11 +27,13 @@ class MainPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     _heightScreen = MediaQuery.of(context).size.height;
     _widthScreen = MediaQuery.of(context).size.width;
-    searchTextFieldController = TextEditingController();
-    return buildUI();
-  }
 
-  Widget buildUI() {
+    // Access the mainPageData from the provider directly
+    final mainPageData = ref.watch(mainPageDataControllerProvider);
+
+    // Initialize searchTextFieldController
+    searchTextFieldController = TextEditingController();
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
@@ -32,7 +42,7 @@ class MainPage extends ConsumerWidget {
         width: _widthScreen,
         child: Stack(
           alignment: Alignment.center,
-          children: [backgroundWidget(), foregroundWidget()],
+          children: [backgroundWidget(), foregroundWidget(mainPageData)],
         ),
       ),
     );
@@ -61,7 +71,7 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget foregroundWidget() {
+  Widget foregroundWidget(MainPageData mainPageData) {
     return Container(
       padding: EdgeInsets.fromLTRB(0, _heightScreen * 0.02, 0, 0),
       width: _widthScreen * 0.88,
@@ -74,12 +84,13 @@ class MainPage extends ConsumerWidget {
           Container(
             height: _heightScreen * 0.83,
             padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
-            child: movieListViewWidget(),
+            child: movieListViewWidget(mainPageData),
           )
         ],
       ),
     );
   }
+
 
   Widget topbarWidget() {
     return SafeArea(
@@ -101,16 +112,17 @@ class MainPage extends ConsumerWidget {
 
   Widget searchViewWidget() {
     final border = InputBorder.none;
-    return Container(
-      width: _widthScreen * 0.5,
-      height: _heightScreen * 0.05,
-      child: TextField(
-        controller: searchTextFieldController,
-        onSubmitted: (value) {},
-        style: TextStyle(
-          color: Colors.white,
-        ),
-        decoration: InputDecoration(
+    return Flexible(  // Wrap with Flexible
+      child: Container(
+        width: _widthScreen * 0.5,
+        height: _heightScreen * 0.05,
+        child: TextField(
+          controller: searchTextFieldController,
+          onSubmitted: (value) {},
+          style: TextStyle(
+            color: Colors.white,
+          ),
+          decoration: InputDecoration(
             focusedBorder: border,
             border: border,
             prefixIcon: Icon(
@@ -120,10 +132,13 @@ class MainPage extends ConsumerWidget {
             hintStyle: TextStyle(color: Colors.white54),
             filled: false,
             fillColor: Colors.white,
-            hintText: "Hôm nay xem...."),
+            hintText: "Hôm nay xem....",
+          ),
+        ),
       ),
     );
   }
+
 
   Widget categorySelectionWidget() {
     return DropdownButton(
@@ -133,8 +148,7 @@ class MainPage extends ConsumerWidget {
         color: Colors.white24,
         Icons.menu,
       ),
-      underline:
-      Container(
+      underline: Container(
         height: 1,
         color: Colors.white24,
       ),
@@ -163,33 +177,26 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget movieListViewWidget() {
-    final List<Movie> movies = [];
+  Widget movieListViewWidget(MainPageData mainPageData) {
+    final List<Movie> movies = mainPageData.movies;
 
-    for (var i = 0; i < 20; i++) {
-      movies.add(Movie(
-          'Moana 2',
-          'EN',
-          false,
-          'After receiving an unexpected call from her wayfinding ancestors, Moana journeys alongside Maui and a new crew to the far seas of Oceania and into dangerous, long-lost waters for an adventure unlike anything she has ever faced.',
-          "/yh64qw9mgXBvlaWDi7Q9tpUBAvH.jpg",
-          "/3V4kLQg0kSqPLctI5ziYWabAZYF.jpg",
-          7.2,
-          '2024-11-27'));
-    }
-    if (movies.length > 0) {
+    if (movies.isNotEmpty) {
       return ListView.builder(
-          itemCount: movies.length,
-          itemBuilder: (BuildContext context, int count) {
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                  vertical: _heightScreen * 0.01, horizontal: 0),
-              child: GestureDetector(
-                onTap: () {},
-                child: MovieTitle(_heightScreen * 0.2, _widthScreen * 0.8, movies[count]),
+        itemCount: movies.length,
+        itemBuilder: (BuildContext context, int count) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
+            child: GestureDetector(
+              onTap: () {},
+              child: MovieTitle(
+                _heightScreen * 0.2, // height of the movie title widget
+                _widthScreen * 0.75, // Adjust the width to fit inside the screen
+                movies[count],
               ),
-            );
-          });
+            ),
+          );
+        },
+      );
     } else {
       return Center(
         child: CircularProgressIndicator(

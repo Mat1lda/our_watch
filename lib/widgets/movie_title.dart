@@ -13,13 +13,15 @@ class MovieTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Container(
       child: Row(
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [moviePosterWidget(movies.posterURL()), movieInfoWidget()],
+        children: [
+          moviePosterWidget(movies.posterURL()),
+          movieInfoWidget(),
+        ],
       ),
     );
   }
@@ -31,71 +33,74 @@ class MovieTitle extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(imgURL),
+          fit: BoxFit.cover, // Ensure the image scales properly
         ),
       ),
     );
   }
 
   Widget movieInfoWidget() {
-    return Container(
-      height: height,
-      width: width * 0.66,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: width * 0.56,
-                child: Text(
-                  movies.name,
-                  overflow: TextOverflow.ellipsis,
+    return Expanded(  // Use Expanded to allow dynamic width adjustment
+      child: Container(
+        height: height,
+        padding: EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: width * 0.56,  // Constrain the width of the title
+                  child: Text(
+                    movies.name,
+                    overflow: TextOverflow.ellipsis,  // Prevent text overflow
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                Text(
+                  movies.ratings.toString(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
-                    fontWeight: FontWeight.w400,
                   ),
                 ),
-              ),
-              Text(
-                movies.ratings.toString(),
+              ],
+            ),
+            Container(
+              padding: EdgeInsets.fromLTRB(0, height * 0.02, 0, 0),
+              child: Text(
+                '${movies.language.toUpperCase()} | R: ${movies.isAdult} | ${movies.releaseDate}',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 12,
                 ),
               ),
-            ],
-          ),
-          Container(
-            padding: EdgeInsets.fromLTRB(0, height * 0.02, 0, 0),
-            child: Text(
-              '${movies.language.toUpperCase()} | R: ${movies.isAdult} | ${movies.releaseDate}',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
+            ),
+            Container(
+              padding: EdgeInsets.fromLTRB(0, height * 0.07, 0, 0),
+              child: Text(
+                '${movies.description}',
+                maxLines: 6,  // Limit to 6 lines
+                overflow: TextOverflow.ellipsis,  // Prevent text overflow
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                ),
               ),
             ),
-          ),
-          Container(
-            padding: EdgeInsets.fromLTRB(0, height * 0.07, 0, 0),
-            child: Text(
-              '${movies.description}',
-              maxLines: 6,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white70,
-                fontWeight: FontWeight.w400,
-                fontSize: 12,
-              ),
-            ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
