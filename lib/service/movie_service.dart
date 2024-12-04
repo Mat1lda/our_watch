@@ -26,4 +26,33 @@ class MovieService{
       throw Exception('cant load');
     }
   }
+  Future<List<Movie>> getUpComingMovies({required int page}) async{
+    Response? response = await http.get('/movie/upcoming', query: {
+      'page': page
+    });
+    if(response?.statusCode == 200){
+      Map data = response?.data;
+      List<Movie> movies = data['results'].map<Movie>((movieData){
+        return Movie.fromJson(movieData);
+      }).toList();
+      return movies;
+    }else{
+      throw Exception('cant load');
+    }
+  }
+  Future<List<Movie>> searchMovies(String searchTerm,{required int page}) async{
+    Response? response = await http.get('/search/movie', query: {
+      'query': searchTerm,
+      'page': page
+    });
+    if(response?.statusCode == 200){
+      Map data = response?.data;
+      List<Movie> movies = data['results'].map<Movie>((movieData){
+        return Movie.fromJson(movieData);
+      }).toList();
+      return movies;
+    }else{
+      throw Exception('cant load');
+    }
+  }
 }

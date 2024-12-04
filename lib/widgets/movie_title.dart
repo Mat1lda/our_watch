@@ -66,7 +66,7 @@ class MovieTitle extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  movies.ratings.toString(),
+                  movies.ratings.toString().substring(0,3),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,

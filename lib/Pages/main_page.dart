@@ -10,8 +10,8 @@ import 'package:out_watch/controller/main_page_controller.dart';
 import 'package:out_watch/model/main_page_data.dart';
 
 final mainPageDataControllerProvider =
-StateNotifierProvider<MainPageController, MainPageData>(
-      (ref) {
+    StateNotifierProvider<MainPageController, MainPageData>(
+  (ref) {
     return MainPageController();
   },
 );
@@ -30,10 +30,11 @@ class MainPage extends ConsumerWidget {
 
     // Access the mainPageData from the provider directly
     final mainPageData = ref.watch(mainPageDataControllerProvider);
-
+    final mainPageController =
+        ref.watch(mainPageDataControllerProvider.notifier);
     // Initialize searchTextFieldController
     searchTextFieldController = TextEditingController();
-
+    searchTextFieldController.text = mainPageData.searchText;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
@@ -42,7 +43,10 @@ class MainPage extends ConsumerWidget {
         width: _widthScreen,
         child: Stack(
           alignment: Alignment.center,
-          children: [backgroundWidget(), foregroundWidget(mainPageData)],
+          children: [
+            backgroundWidget(),
+            foregroundWidget(mainPageData, mainPageController)
+          ],
         ),
       ),
     );
@@ -71,7 +75,8 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget foregroundWidget(MainPageData mainPageData) {
+  Widget foregroundWidget(
+      MainPageData mainPageData, MainPageController mainPageController) {
     return Container(
       padding: EdgeInsets.fromLTRB(0, _heightScreen * 0.02, 0, 0),
       width: _widthScreen * 0.88,
@@ -80,19 +85,19 @@ class MainPage extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          topbarWidget(),
+          topbarWidget(mainPageData, mainPageController),
           Container(
             height: _heightScreen * 0.83,
             padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
-            child: movieListViewWidget(mainPageData),
+            child: movieListViewWidget(mainPageData, mainPageController),
           )
         ],
       ),
     );
   }
 
-
-  Widget topbarWidget() {
+  Widget topbarWidget(
+      MainPageData mainPageData, MainPageController mainPageController) {
     return SafeArea(
       child: Container(
         height: _heightScreen * 0.08,
@@ -104,21 +109,25 @@ class MainPage extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [searchViewWidget(), categorySelectionWidget()],
+          children: [
+            searchViewWidget(mainPageController),
+            categorySelectionWidget(mainPageData, mainPageController)
+          ],
         ),
       ),
     );
   }
 
-  Widget searchViewWidget() {
+  Widget searchViewWidget(MainPageController mainPageController) {
     final border = InputBorder.none;
-    return Flexible(  // Wrap with Flexible
+    return Flexible(
+      // Wrap with Flexible
       child: Container(
         width: _widthScreen * 0.5,
         height: _heightScreen * 0.05,
         child: TextField(
           controller: searchTextFieldController,
-          onSubmitted: (value) {},
+          onSubmitted: (value) => mainPageController.updateTextSearch(value),
           style: TextStyle(
             color: Colors.white,
           ),
@@ -139,11 +148,11 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-
-  Widget categorySelectionWidget() {
+  Widget categorySelectionWidget(
+      MainPageData mainPageData, MainPageController mainPageController) {
     return DropdownButton(
-      dropdownColor: Colors.black87,
-      value: SearchCategory.popular,
+      dropdownColor: Colors.black38,
+      value: mainPageData.searchCategory,
       icon: Icon(
         color: Colors.white24,
         Icons.menu,
@@ -152,7 +161,9 @@ class MainPage extends ConsumerWidget {
         height: 1,
         color: Colors.white24,
       ),
-      onChanged: (value) {},
+      onChanged: (value) => value.toString().isNotEmpty
+          ? mainPageController.updateSearchCategory(value!)
+          : null,
       items: [
         DropdownMenuItem(
           child: Text(SearchCategory.popular,
@@ -177,25 +188,43 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget movieListViewWidget(MainPageData mainPageData) {
+  Widget movieListViewWidget(MainPageData mainPageData, MainPageController mainPageController) {
     final List<Movie> movies = mainPageData.movies;
 
     if (movies.isNotEmpty) {
-      return ListView.builder(
-        itemCount: movies.length,
-        itemBuilder: (BuildContext context, int count) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
-            child: GestureDetector(
-              onTap: () {},
-              child: MovieTitle(
-                _heightScreen * 0.2, // height of the movie title widget
-                _widthScreen * 0.75, // Adjust the width to fit inside the screen
-                movies[count],
-              ),
-            ),
-          );
+      return NotificationListener<ScrollNotification>(
+        onNotification: (onScrollNotification) {
+          if (onScrollNotification is ScrollEndNotification) {
+            final before = onScrollNotification.metrics.extentBefore;
+            final max = onScrollNotification.metrics.maxScrollExtent;
+
+            // Check if the user reached the bottom of the list
+            if (before == max) {
+              // Trigger to load more movies
+              mainPageController.getMovies();
+              return true;
+            }
+          }
+          return false;
         },
+        child: ListView.builder(
+          itemCount: movies.length,
+          itemBuilder: (BuildContext context, int count) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
+              child: GestureDetector(
+                onTap: () {
+                  // Handle movie tap
+                },
+                child: MovieTitle(
+                  _heightScreen * 0.2, // height of the movie title widget
+                  _widthScreen * 0.75, // Adjust the width to fit inside the screen
+                  movies[count],
+                ),
+              ),
+            );
+          },
+        ),
       );
     } else {
       return Center(
@@ -205,4 +234,5 @@ class MainPage extends ConsumerWidget {
       );
     }
   }
+
 }

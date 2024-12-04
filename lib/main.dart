@@ -7,7 +7,7 @@ import './Pages/splash_page.dart';
 void main() {
   runApp(SplashPage(
     key: UniqueKey(),
-    onInitializationComplete: () => runApp(ProviderScope(child: MyApp())),
+    onInitializationComplete: () => runApp(ProviderScope(child: MyApp())),//dung providerscope cua river pod, sau do dung comsumer widget de dung dc watch quan ly state
   ));
 }
 
