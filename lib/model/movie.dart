@@ -20,6 +20,10 @@ class Movie {
   String posterURL(){
     final AppConfig appConfig = GetIt.instance.get<AppConfig>();
     return '${appConfig.BASE_IMAGE_API_URL}${this.posterPath}';
+
+      // Return a default image URL or placeholder
+      return 'https://www.uplevo.com/img/designbox/poster-phim-me-and-earl.jpg';
+
   }
 
 }

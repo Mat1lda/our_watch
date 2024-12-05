@@ -15,10 +15,18 @@ final mainPageDataControllerProvider =
     return MainPageController();
   },
 );
-
+final selectedMoviePosterURLProvider = StateProvider<String>((ref) {
+  final movies = ref.watch(mainPageDataControllerProvider).movies;
+  if (movies.isEmpty) {
+    return 'https://www.uplevo.com/img/designbox/poster-phim-me-and-earl.jpg'; // Default fallback image
+  } else {
+    return movies[0].posterURL(); // Get the first movie's poster URL
+  }
+},);
 class MainPage extends ConsumerWidget {
   late double _heightScreen;
   late double _widthScreen;
+  late String selectedMoviesPosterURL;
   late var searchTextFieldController = TextEditingController();
 
   MainPage({super.key});
@@ -32,6 +40,7 @@ class MainPage extends ConsumerWidget {
     final mainPageData = ref.watch(mainPageDataControllerProvider);
     final mainPageController =
         ref.watch(mainPageDataControllerProvider.notifier);
+    selectedMoviesPosterURL = ref.watch(selectedMoviePosterURLProvider);
     // Initialize searchTextFieldController
     searchTextFieldController = TextEditingController();
     searchTextFieldController.text = mainPageData.searchText;
@@ -45,7 +54,7 @@ class MainPage extends ConsumerWidget {
           alignment: Alignment.center,
           children: [
             backgroundWidget(),
-            foregroundWidget(mainPageData, mainPageController)
+            foregroundWidget(mainPageData, mainPageController, ref)
           ],
         ),
       ),
@@ -53,13 +62,16 @@ class MainPage extends ConsumerWidget {
   }
 
   Widget backgroundWidget() {
+    final imageUrl = selectedMoviesPosterURL.isEmpty
+        ? 'https://www.uplevo.com/img/designbox/poster-phim-me-and-earl.jpg' // Use a valid default image URL
+        : selectedMoviesPosterURL;
     return Container(
       height: _heightScreen,
       width: _widthScreen,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
         image: DecorationImage(
-          image: AssetImage("assets/images/bg.jpg"),
+          image: NetworkImage(imageUrl),
           fit: BoxFit.cover,
         ),
       ),
@@ -76,7 +88,7 @@ class MainPage extends ConsumerWidget {
   }
 
   Widget foregroundWidget(
-      MainPageData mainPageData, MainPageController mainPageController) {
+      MainPageData mainPageData, MainPageController mainPageController, WidgetRef ref) {
     return Container(
       padding: EdgeInsets.fromLTRB(0, _heightScreen * 0.02, 0, 0),
       width: _widthScreen * 0.88,
@@ -89,7 +101,7 @@ class MainPage extends ConsumerWidget {
           Container(
             height: _heightScreen * 0.83,
             padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
-            child: movieListViewWidget(mainPageData, mainPageController),
+            child: movieListViewWidget(mainPageData, mainPageController, ref),
           )
         ],
       ),
@@ -188,7 +200,7 @@ class MainPage extends ConsumerWidget {
     );
   }
 
-  Widget movieListViewWidget(MainPageData mainPageData, MainPageController mainPageController) {
+  Widget movieListViewWidget(MainPageData mainPageData, MainPageController mainPageController, WidgetRef ref) {
     final List<Movie> movies = mainPageData.movies;
 
     if (movies.isNotEmpty) {
@@ -214,7 +226,7 @@ class MainPage extends ConsumerWidget {
               padding: EdgeInsets.symmetric(vertical: _heightScreen * 0.01),
               child: GestureDetector(
                 onTap: () {
-                  // Handle movie tap
+                  ref.read(selectedMoviePosterURLProvider.notifier).state = movies[count].posterURL();
                 },
                 child: MovieTitle(
                   _heightScreen * 0.2, // height of the movie title widget

@@ -17,17 +17,20 @@ class MainPageController extends StateNotifier<MainPageData> {
   Future<void> getMovies() async {
     try {
       List<Movie> movies = [];
-      if (state.searchText.isEmpty) {
+
+      // Only attempt search when searchText is not empty
+      if (state.searchText.isNotEmpty) {
+        movies = await movieService.searchMovies(state.searchText, page: state.page);
+      } else {
         if (state.searchCategory == SearchCategory.popular) {
           movies = await movieService.getPopularMovies(page: state.page);
         } else if (state.searchCategory == SearchCategory.upcoming) {
           movies = await movieService.getUpComingMovies(page: state.page);
         } else if (state.searchCategory == SearchCategory.none) {
           movies = [];
-        }else{
-          movies = await movieService.searchMovies(state.searchText, page: state.page);
         }
       }
+
       if (movies.isNotEmpty) {
         state = state.copyWith(
           movies: [...state.movies, ...movies],
@@ -38,6 +41,7 @@ class MainPageController extends StateNotifier<MainPageData> {
       print("Error fetching movies: $e");
     }
   }
+
 
   void updateSearchCategory(String category) {
     try {
